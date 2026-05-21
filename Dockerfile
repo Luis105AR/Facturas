@@ -1,25 +1,20 @@
-FROM php:8.2-apache
+FROM php:8.2-cli
 
 RUN apt-get update && apt-get install -y \
     libicu-dev \
-    zip \
     unzip \
     git \
+    zip \
     && docker-php-ext-install intl pdo pdo_mysql
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/html
+WORKDIR /app
 
 COPY . .
 
 RUN composer install --optimize-autoloader --no-interaction
 
-RUN a2enmod rewrite
+EXPOSE 8080
 
-ENV APACHE_DOCUMENT_ROOT /var/www/html/webroot
-
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
-    /etc/apache2/sites-available/*.conf
-
-EXPOSE 80
+CMD php -S 0.0.0.0:$PORT -t webroot
